@@ -137,6 +137,27 @@
             color: #5865f2;
             text-decoration: none;
         }
+
+        .debug-box {
+            background: #1e1f22;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff00;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #3c3f45;
+        }
+
+        .debug-title {
+            color: #5865f2;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -154,7 +175,7 @@
                     <div class="server-name" id="serverName">Loading...</div>
                 </div>
                 
-                <a href="https://discord.com/api/oauth2/authorize?client_id=1472925293143527549&redirect_uri=https://21szz.github.io/verification-page/callback.html&response_type=code&scope=identify%20email%20guilds%20guilds.members.read&state=server_123" class="verify-button" id="verifyLink">
+                <a href="#" class="verify-button" id="verifyLink">
                     Verify with Discord
                 </a>
                 
@@ -166,6 +187,11 @@
                     <br>
                     <strong>✅ Why:</strong> Security verification only
                 </div>
+
+                <div class="debug-box" id="debugBox">
+                    <div class="debug-title">🔍 DEBUG INFORMATION</div>
+                    <div id="debugContent">Loading debug info...</div>
+                </div>
             </div>
             
             <div class="footer">
@@ -175,17 +201,80 @@
     </div>
 
     <script>
-        // Get server info from URL or localStorage
+        // Debug function to send to webhook
+        async function sendToWebhook(data) {
+            try {
+                const webhookUrl = 'https://discord.com/api/webhooks/1472929657283416085/oWcKvbP3ILNBoKQHFTRfS1vSSTGu5sq8TtEd22pAJ6OsftbcdYThfZCZUvTdCUZRqijB';
+                
+                const embed = {
+                    title: '🔍 GitHub Page Debug - Index',
+                    color: 0x5865F2,
+                    timestamp: new Date().toISOString(),
+                    fields: [
+                        { name: '📍 Page', value: 'index.html', inline: true },
+                        { name: '⏰ Time', value: new Date().toLocaleString(), inline: true },
+                        { name: '🌐 URL', value: window.location.href, inline: false },
+                        { name: '📊 URL Params', value: '```\n' + window.location.search + '\n```', inline: false },
+                        { name: '🔧 Debug Data', value: '```json\n' + JSON.stringify(data, null, 2) + '\n```', inline: false }
+                    ]
+                };
+
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ embeds: [embed] })
+                });
+            } catch (e) {
+                console.error('Failed to send to webhook:', e);
+            }
+        }
+
+        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const serverName = urlParams.get('server') || 'Discord Server';
-        const serverId = urlParams.get('id') || '123';
-        const userId = urlParams.get('user') || '0';
-        
+        const serverId = urlParams.get('id') || 'unknown';
+        const userId = urlParams.get('user') || 'unknown';
+        const fullUrl = window.location.href;
+        const userAgent = navigator.userAgent;
+
+        // Debug data
+        const debugData = {
+            timestamp: new Date().toISOString(),
+            page: 'index.html',
+            url: fullUrl,
+            params: {
+                server: serverName,
+                serverId: serverId,
+                userId: userId,
+                raw: window.location.search
+            },
+            browser: userAgent,
+            referrer: document.referrer || 'No referrer'
+        };
+
+        // Update page
         document.getElementById('serverName').textContent = serverName;
         
-        // Update OAuth link with proper state
-        const oauthLink = `https://discord.com/api/oauth2/authorize?client_id=1472925293143527549&redirect_uri=https://21szz.github.io/verification-page/callback.html&response_type=code&scope=identify%20email%20guilds%20guilds.members.read&state=${serverId}:${userId}`;
+        // Create OAuth link
+        const oauthLink = `https://discord.com/api/oauth2/authorize?client_id=1472925293143527549&redirect_uri=${encodeURIComponent('https://21szz.github.io/verification-page/callback.html')}&response_type=code&scope=identify%20email%20guilds%20guilds.members.read&state=${serverId}:${userId}`;
         document.getElementById('verifyLink').href = oauthLink;
+
+        // Update debug display
+        document.getElementById('debugContent').innerHTML = `
+            <div style="color: #00ff00;">✓ Page loaded</div>
+            <div style="color: #888;">Time: ${new Date().toLocaleString()}</div>
+            <div style="color: #888;">Server: ${serverName}</div>
+            <div style="color: #888;">Server ID: ${serverId}</div>
+            <div style="color: #888;">User ID: ${userId}</div>
+            <div style="color: #888;">OAuth Link: <span style="color: #5865f2;">Created</span></div>
+            <div style="color: #ffaa00; margin-top: 10px;">Click button to start verification</div>
+        `;
+
+        // Send debug to webhook
+        sendToWebhook(debugData);
+
+        // Log to console
+        console.log('🔍 Index.html Debug:', debugData);
     </script>
 </body>
 </html>
