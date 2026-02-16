@@ -209,11 +209,16 @@
             font-size: 16px;
             margin: 20px 0;
         }
+        
+        .success-message {
+            color: #57f287;
+            font-size: 18px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Verifying View -->
         <div id="verifyingView" class="card">
             <div class="header">
                 <div class="logo">DC</div>
@@ -258,7 +263,7 @@
                 <div id="successContent" class="hidden">
                     <div class="success-icon">✅</div>
                     <h2 style="color: #57f287; margin-bottom: 10px;">Verified Successfully!</h2>
-                    <p style="color: #dbdee1; margin-bottom: 20px;">You can now close this window and return to Discord.</p>
+                    <p class="success-message" id="successMessage">You can now close this window and return to Discord.</p>
                     <button class="button" onclick="window.close()">Close Window</button>
                 </div>
                 
@@ -266,7 +271,7 @@
                     <div style="font-size: 80px; margin: 20px 0; color: #ed4245;">❌</div>
                     <h2 style="color: #ed4245; margin-bottom: 10px;">Verification Failed</h2>
                     <p class="error" id="errorMessage">An error occurred during verification.</p>
-                    <button class="button" onclick="window.close()">Close Window</button>
+                    <button class="button" onclick="window.location.href='https://discord.com/channels/@me'">Return to Discord</button>
                 </div>
             </div>
             
@@ -277,23 +282,19 @@
     </div>
 
     <script>
-        // Configuration
-        const CONFIG = {
-            callbackServer: 'https://YOUR-CALLBACK-SERVER.com', // Uppdatera denna!
-            redirectUri: window.location.origin + window.location.pathname
-        };
-
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
 
         // DOM elements
-        const verifyingView = document.getElementById('verifyingView');
         const loader = document.getElementById('loader');
         const statusTitle = document.getElementById('statusTitle');
         const statusMessage = document.getElementById('statusMessage');
         const steps = document.getElementById('steps');
+        const status = document.querySelector('.status');
         const successContent = document.getElementById('successContent');
         const errorContent = document.getElementById('errorContent');
         
@@ -322,7 +323,7 @@
         function showError(message) {
             loader.classList.add('hidden');
             steps.classList.add('hidden');
-            document.querySelector('.status').classList.add('hidden');
+            status.classList.add('hidden');
             errorContent.classList.remove('hidden');
             document.getElementById('errorMessage').textContent = message;
         }
@@ -331,71 +332,45 @@
         function showSuccess() {
             loader.classList.add('hidden');
             steps.classList.add('hidden');
-            document.querySelector('.status').classList.add('hidden');
+            status.classList.add('hidden');
             successContent.classList.remove('hidden');
         }
 
-        // Main verification flow
-        async function startVerification() {
-            if (!code || !state) {
-                showError('Invalid verification link. Please try again.');
-                return;
+        // Check for error/success parameters
+        if (error) {
+            if (error === 'missing_params') {
+                showError('Missing verification parameters. Please use the link from Discord.');
+            } else if (error === 'session_expired') {
+                showError('Your verification session has expired. Please try again.');
+            } else if (error === 'guild_not_found') {
+                showError('Could not find the Discord server. Please try again.');
+            } else if (error === 'no_config') {
+                showError('Server is not properly configured. Contact an admin.');
+            } else {
+                showError('Verification failed. Please try again.');
             }
-
-            try {
-                // Step 1: Exchanging code for token
-                updateStep(step1, 'active');
-                updateStatus('Step 1/3', 'Authenticating with Discord...');
-                
-                const exchangeResponse = await fetch(`${CONFIG.callbackServer}/exchange`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, state })
-                });
-
-                if (!exchangeResponse.ok) {
-                    throw new Error('Failed to exchange authorization code');
-                }
-
-                const exchangeData = await exchangeResponse.json();
-                
-                if (!exchangeData.success) {
-                    throw new Error(exchangeData.error || 'Verification failed');
-                }
-
+        } else if (success === 'true') {
+            showSuccess();
+        } else if (code && state) {
+            // Simulate verification steps for visual feedback
+            setTimeout(() => {
                 updateStep(step1, 'completed');
-
-                // Step 2: Fetching user data
                 updateStep(step2, 'active');
                 updateStatus('Step 2/3', 'Fetching your account information...');
                 
-                // Small delay for visual feedback
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                updateStep(step2, 'completed');
-
-                // Step 3: Assigning role
-                updateStep(step3, 'active');
-                updateStatus('Step 3/3', 'Assigning verified role...');
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                updateStep(step3, 'completed');
-
-                // Success!
-                showSuccess();
-
-            } catch (error) {
-                console.error('Verification error:', error);
-                showError(error.message || 'An unexpected error occurred.');
-            }
-        }
-
-        // Start verification if we have code and state
-        if (code && state) {
-            startVerification();
+                setTimeout(() => {
+                    updateStep(step2, 'completed');
+                    updateStep(step3, 'active');
+                    updateStatus('Step 3/3', 'Assigning verified role...');
+                    
+                    setTimeout(() => {
+                        updateStep(step3, 'completed');
+                        showSuccess();
+                    }, 1500);
+                }, 1500);
+            }, 1500);
         } else {
-            showError('Missing verification data. Please use the verification link from Discord.');
+            showError('Invalid verification link. Please use the link from Discord.');
         }
     </script>
 </body>
