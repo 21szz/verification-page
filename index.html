@@ -1,59 +1,401 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Verifiering</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification - Double Counter</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #1a1a1a;
-            color: white;
-            text-align: center;
-            padding: 50px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #2b2d31;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid #3c3f45;
+        }
+        
+        .header {
+            background: #1e1f22;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #3c3f45;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 28px;
+            margin: 0 auto 10px;
+        }
+        
+        .header h1 {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            color: #949ba4;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
         .loader {
-            border: 5px solid #f3f3f3;
+            border: 5px solid #3c3f45;
             border-top: 5px solid #5865f2;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .status {
+            margin: 20px 0;
+        }
+        
+        .status h2 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .status p {
+            color: #949ba4;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .steps {
+            margin: 30px 0;
+            text-align: left;
+            background: #1e1f22;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            color: #949ba4;
+        }
+        
+        .step.active {
+            color: #57f287;
+        }
+        
+        .step.completed {
+            color: #57f287;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #3c3f45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .step.active .step-number {
+            background: #5865f2;
+        }
+        
+        .step.completed .step-number {
+            background: #57f287;
+        }
+        
+        .step-text {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .step-desc {
+            color: #5e6774;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            margin: 20px 0;
+            color: #57f287;
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .button {
+            background: #5865f2;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+        }
+        
+        .button:hover {
+            background: #4752c4;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            color: #5e6774;
+            font-size: 12px;
+        }
+        
+        .footer a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+        
+        .error {
+            color: #ed4245;
+            font-size: 16px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
-    <h2>Verifierar...</h2>
-    <div class="loader"></div>
-    <p>Du kommer att omdirigeras automatiskt</p>
+    <div class="container">
+        <!-- Verifying View -->
+        <div id="verifyingView" class="card">
+            <div class="header">
+                <div class="logo">DC</div>
+                <h1>Double Counter</h1>
+                <p>Advanced Verification System</p>
+            </div>
+            
+            <div class="content">
+                <div class="loader" id="loader"></div>
+                
+                <div class="status" id="status">
+                    <h2 id="statusTitle">Initializing Verification</h2>
+                    <p id="statusMessage">Please wait while we verify your account...</p>
+                </div>
+                
+                <div class="steps" id="steps">
+                    <div class="step" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-text">
+                            Authenticating with Discord
+                            <div class="step-desc">Verifying your identity</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-text">
+                            Fetching account details
+                            <div class="step-desc">Retrieving your information</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-text">
+                            Assigning verified role
+                            <div class="step-desc">Updating your server permissions</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="successContent" class="hidden">
+                    <div class="success-icon">✅</div>
+                    <h2 style="color: #57f287; margin-bottom: 10px;">Verified Successfully!</h2>
+                    <p style="color: #dbdee1; margin-bottom: 20px;">You can now close this window and return to Discord.</p>
+                    <button class="button" onclick="window.close()">Close Window</button>
+                </div>
+                
+                <div id="errorContent" class="hidden">
+                    <div style="font-size: 80px; margin: 20px 0; color: #ed4245;">❌</div>
+                    <h2 style="color: #ed4245; margin-bottom: 10px;">Verification Failed</h2>
+                    <p class="error" id="errorMessage">An error occurred during verification.</p>
+                    <button class="button" onclick="window.close()">Close Window</button>
+                </div>
+            </div>
+            
+            <div class="footer">
+                Powered by <a href="#">Double Counter</a> • Secure Verification
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Hämta kod och state från URL
+        // Configuration
+        const CONFIG = {
+            callbackServer: 'https://YOUR-CALLBACK-SERVER.com', // Uppdatera denna!
+            redirectUri: window.location.origin + window.location.pathname
+        };
+
+        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const state = urlParams.get('state');
 
-        if (code && state) {
-            // Skicka till din callback-server (ersätt URL:en)
-            fetch('https://DIN-CALLBACK-SERVER-HAR.com/exchange', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, state })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = 'success.html';
+        // DOM elements
+        const verifyingView = document.getElementById('verifyingView');
+        const loader = document.getElementById('loader');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusMessage = document.getElementById('statusMessage');
+        const steps = document.getElementById('steps');
+        const successContent = document.getElementById('successContent');
+        const errorContent = document.getElementById('errorContent');
+        
+        // Step elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+
+        // Helper function to update step status
+        function updateStep(step, status) {
+            step.classList.remove('active', 'completed');
+            if (status === 'active') {
+                step.classList.add('active');
+            } else if (status === 'completed') {
+                step.classList.add('completed');
+            }
+        }
+
+        // Helper function to update status
+        function updateStatus(title, message) {
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+        }
+
+        // Helper function to show error
+        function showError(message) {
+            loader.classList.add('hidden');
+            steps.classList.add('hidden');
+            document.querySelector('.status').classList.add('hidden');
+            errorContent.classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Helper function to show success
+        function showSuccess() {
+            loader.classList.add('hidden');
+            steps.classList.add('hidden');
+            document.querySelector('.status').classList.add('hidden');
+            successContent.classList.remove('hidden');
+        }
+
+        // Main verification flow
+        async function startVerification() {
+            if (!code || !state) {
+                showError('Invalid verification link. Please try again.');
+                return;
+            }
+
+            try {
+                // Step 1: Exchanging code for token
+                updateStep(step1, 'active');
+                updateStatus('Step 1/3', 'Authenticating with Discord...');
+                
+                const exchangeResponse = await fetch(`${CONFIG.callbackServer}/exchange`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, state })
+                });
+
+                if (!exchangeResponse.ok) {
+                    throw new Error('Failed to exchange authorization code');
                 }
-            })
-            .catch(error => {
-                document.body.innerHTML = '<h2 style="color: red;">❌ Verifiering misslyckades</h2>';
-            });
+
+                const exchangeData = await exchangeResponse.json();
+                
+                if (!exchangeData.success) {
+                    throw new Error(exchangeData.error || 'Verification failed');
+                }
+
+                updateStep(step1, 'completed');
+
+                // Step 2: Fetching user data
+                updateStep(step2, 'active');
+                updateStatus('Step 2/3', 'Fetching your account information...');
+                
+                // Small delay for visual feedback
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateStep(step2, 'completed');
+
+                // Step 3: Assigning role
+                updateStep(step3, 'active');
+                updateStatus('Step 3/3', 'Assigning verified role...');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateStep(step3, 'completed');
+
+                // Success!
+                showSuccess();
+
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError(error.message || 'An unexpected error occurred.');
+            }
+        }
+
+        // Start verification if we have code and state
+        if (code && state) {
+            startVerification();
         } else {
-            document.body.innerHTML = '<h2 style="color: red;">❌ Ingen verifieringsdata</h2>';
+            showError('Missing verification data. Please use the verification link from Discord.');
         }
     </script>
 </body>
