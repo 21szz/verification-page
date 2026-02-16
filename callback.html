@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verification - Double Counter</title>
     <style>
-        /* Samma CSS som din befintliga index.html */
         * {
             margin: 0;
             padding: 0;
@@ -216,6 +215,35 @@
             font-size: 18px;
             margin: 20px 0;
         }
+
+        .debug-box {
+            background: #1e1f22;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff00;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #3c3f45;
+        }
+
+        .debug-title {
+            color: #5865f2;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .error-text {
+            color: #ed4245;
+        }
+
+        .success-text {
+            color: #57f287;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +302,11 @@
                     <p class="error" id="errorMessage">An error occurred during verification.</p>
                     <button class="button" onclick="window.location.href='https://discord.com/channels/@me'">Return to Discord</button>
                 </div>
+
+                <div class="debug-box" id="debugBox">
+                    <div class="debug-title">🔍 DEBUG INFORMATION</div>
+                    <div id="debugContent">Initializing debug...</div>
+                </div>
             </div>
             
             <div class="footer">
@@ -283,12 +316,68 @@
     </div>
 
     <script>
-        const BOT_API_URL = 'http://localhost:3000'; // Din lokala bot
+        const BOT_API_URL = 'http://localhost:3000';
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1472929657283416085/oWcKvbP3ILNBoKQHFTRfS1vSSTGu5sq8TtEd22pAJ6OsftbcdYThfZCZUvTdCUZRqijB';
+
+        // Debug function to send to webhook
+        async function sendDebugToWebhook(data, type = 'info') {
+            try {
+                const colors = {
+                    info: 0x5865F2,
+                    success: 0x57f287,
+                    error: 0xed4245,
+                    warning: 0xfee75c
+                };
+
+                const embed = {
+                    title: `🔍 GitHub Page Debug - ${type.toUpperCase()}`,
+                    color: colors[type] || 0x5865F2,
+                    timestamp: new Date().toISOString(),
+                    fields: [
+                        { name: '📍 Page', value: 'callback.html', inline: true },
+                        { name: '⏰ Time', value: new Date().toLocaleString(), inline: true },
+                        { name: '🌐 Full URL', value: window.location.href, inline: false },
+                        { name: '📊 URL Params', value: '```\n' + window.location.search + '\n```', inline: false },
+                        { name: '🔧 Debug Data', value: '```json\n' + JSON.stringify(data, null, 2).substring(0, 1000) + '\n```', inline: false }
+                    ]
+                };
+
+                if (data.error) {
+                    embed.fields.push({ name: '❌ Error', value: data.error, inline: false });
+                }
+
+                await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ embeds: [embed] })
+                });
+            } catch (e) {
+                console.error('Failed to send to webhook:', e);
+            }
+        }
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const state = urlParams.get('state'); // Format: serverId:userId
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const fullUrl = window.location.href;
+
+        // Debug data
+        const debugData = {
+            timestamp: new Date().toISOString(),
+            page: 'callback.html',
+            fullUrl: fullUrl,
+            hasCode: !!code,
+            hasState: !!state,
+            hasError: !!error,
+            code: code ? code.substring(0, 20) + '...' : null,
+            state: state,
+            error: error,
+            allParams: Object.fromEntries(urlParams.entries()),
+            userAgent: navigator.userAgent,
+            referrer: document.referrer || 'No referrer'
+        };
 
         // DOM elements
         const loader = document.getElementById('loader');
@@ -298,6 +387,7 @@
         const status = document.querySelector('.status');
         const successContent = document.getElementById('successContent');
         const errorContent = document.getElementById('errorContent');
+        const debugContent = document.getElementById('debugContent');
         
         // Step elements
         const step1 = document.getElementById('step1');
@@ -324,6 +414,9 @@
             status.classList.add('hidden');
             errorContent.classList.remove('hidden');
             document.getElementById('errorMessage').textContent = message;
+            
+            updateDebugContent('error', message);
+            sendDebugToWebhook({ ...debugData, error: message }, 'error');
         }
 
         function showSuccess() {
@@ -331,43 +424,79 @@
             steps.classList.add('hidden');
             status.classList.add('hidden');
             successContent.classList.remove('hidden');
+            
+            updateDebugContent('success', 'Verification completed successfully');
+            sendDebugToWebhook(debugData, 'success');
+        }
+
+        function updateDebugContent(type, message) {
+            let html = `
+                <div style="color: ${type === 'error' ? '#ed4245' : type === 'success' ? '#57f287' : '#00ff00'};">
+                    ${type === 'error' ? '❌' : type === 'success' ? '✅' : '🔄'} ${message || 'Processing...'}
+                </div>
+                <div style="color: #888; margin-top: 10px;">Time: ${new Date().toLocaleString()}</div>
+                <div style="color: #888;">Code present: ${debugData.hasCode ? '✅' : '❌'}</div>
+                <div style="color: #888;">State: ${debugData.state || 'None'}</div>
+                <div style="color: #888;">Error param: ${debugData.error || 'None'}</div>
+                <div style="color: #888; margin-top: 10px; word-break: break-all;">URL: ${debugData.fullUrl}</div>
+            `;
+            
+            if (debugData.hasCode) {
+                html += `<div style="color: #5865f2; margin-top: 10px;">Code: ${debugData.code}</div>`;
+            }
+            
+            debugContent.innerHTML = html;
         }
 
         async function completeVerification() {
+            updateDebugContent('info', 'Starting verification process...');
+            
             if (!code || !state) {
-                showError('Invalid verification link');
+                const errorMsg = !code ? 'Missing authorization code' : 'Missing state parameter';
+                showError(errorMsg);
                 return;
             }
 
             try {
                 // Step 1
                 updateStep(step1, 'active');
-                updateStatus('Step 1/3', 'Authenticating with Discord...');
+                updateStatus('Step 1/3', 'Contacting verification server...');
+                updateDebugContent('info', 'Step 1: Contacting local bot...');
+
+                console.log('Sending to bot:', { code, state });
                 
-                // Send code to your local bot
                 const response = await fetch(`${BOT_API_URL}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code, state })
                 });
 
+                updateDebugContent('info', `Bot response status: ${response.status}`);
+
                 if (!response.ok) {
-                    throw new Error('Verification failed');
+                    const errorText = await response.text();
+                    throw new Error(`Bot returned ${response.status}: ${errorText}`);
                 }
 
                 const data = await response.json();
+                console.log('Bot response:', data);
                 
+                updateDebugContent('success', 'Bot responded successfully');
                 updateStep(step1, 'completed');
 
                 // Step 2
                 updateStep(step2, 'active');
-                updateStatus('Step 2/3', 'Fetching account details...');
+                updateStatus('Step 2/3', 'Processing verification...');
+                updateDebugContent('info', 'Step 2: Processing verification data...');
+                
                 await new Promise(r => setTimeout(r, 1000));
                 updateStep(step2, 'completed');
 
                 // Step 3
                 updateStep(step3, 'active');
-                updateStatus('Step 3/3', 'Assigning verified role...');
+                updateStatus('Step 3/3', 'Finalizing...');
+                updateDebugContent('info', 'Step 3: Finalizing verification...');
+                
                 await new Promise(r => setTimeout(r, 1000));
                 updateStep(step3, 'completed');
 
@@ -376,16 +505,32 @@
 
             } catch (error) {
                 console.error('Verification error:', error);
+                updateDebugContent('error', `Error: ${error.message}`);
                 showError(error.message);
             }
         }
 
-        // Start verification
-        if (code && state) {
+        // Initial debug display
+        updateDebugContent('info', 'Page loaded, checking parameters...');
+        
+        // Send initial debug to webhook
+        sendDebugToWebhook(debugData, 'info');
+
+        // Check for error parameter
+        if (error) {
+            showError(`Discord returned error: ${error}`);
+        } 
+        // Check for code and state
+        else if (code && state) {
             completeVerification();
-        } else {
-            showError('Missing verification data');
+        } 
+        // Missing parameters
+        else {
+            showError('Invalid verification link. Missing required parameters.');
         }
+
+        // Log to console
+        console.log('🔍 Callback.html Debug:', debugData);
     </script>
 </body>
 </html>
