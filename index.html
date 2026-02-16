@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verifiering</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 50px;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #5865f2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h2>Verifierar...</h2>
+    <div class="loader"></div>
+    <p>Du kommer att omdirigeras automatiskt</p>
+
+    <script>
+        // Hämta kod och state från URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+
+        if (code && state) {
+            // Skicka till din callback-server (ersätt URL:en)
+            fetch('https://DIN-CALLBACK-SERVER-HAR.com/exchange', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, state })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'success.html';
+                }
+            })
+            .catch(error => {
+                document.body.innerHTML = '<h2 style="color: red;">❌ Verifiering misslyckades</h2>';
+            });
+        } else {
+            document.body.innerHTML = '<h2 style="color: red;">❌ Ingen verifieringsdata</h2>';
+        }
+    </script>
+</body>
+</html>
